@@ -1,35 +1,19 @@
 import logging
 
+from pos_logic import (
+    DRINK_MENU,
+    current_order,
+    add_to_order,
+    calculate_total,
+    ItemNotFoundError,
+    InvalidQuantityError
+)
+
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
-
-DRINK_MENU = {
-    "P1": {
-        "name": "Phin Sữa Đá",
-        "price": 35000
-    },
-    "F1": {
-        "name": "Freeze Trà Xanh",
-        "price": 55000
-    },
-    "T1": {
-        "name": "Trà Sen Vàng",
-        "price": 45000
-    }
-}
-
-current_order = []
-
-
-class ItemNotFoundError(Exception):
-    pass
-
-
-class InvalidQuantityError(Exception):
-    pass
 
 
 def show_menu():
@@ -53,54 +37,70 @@ def view_drink_menu():
         )
 
 
-def add_to_order(drink_code, quantity):
-    drink_code = drink_code.strip().upper()
+def handle_add_order():
+    print("\n--- THÊM MÓN VÀO GIỎ ---")
 
-    if drink_code not in DRINK_MENU:
-        raise ItemNotFoundError
-
-    if quantity <= 0:
-        raise InvalidQuantityError
-
-    current_order.append(
-        {
-            "code": drink_code,
-            "quantity": quantity
-        }
-    )
-
-    logging.info(
-        f"Added {quantity} of {drink_code} to order"
-    )
-
-
-def calculate_total(order_list):
-    total = 0
-
-    for item in order_list:
-        code = item["code"]
-        quantity = item["quantity"]
-
-        total += (
-            DRINK_MENU[code]["price"]
-            * quantity
+    try:
+        drink_code = input(
+            "Nhập mã đồ uống: "
         )
 
-    return total
+        quantity = int(
+            input("Nhập số lượng: ")
+        )
+
+        add_to_order(
+            drink_code,
+            quantity
+        )
+
+        code = drink_code.strip().upper()
+
+        print(
+            f"Đã thêm {quantity} x "
+            f"{DRINK_MENU[code]['name']} "
+            f"vào giỏ hàng."
+        )
+
+    except ValueError:
+        print(
+            "Vui lòng nhập số lượng là một số nguyên!"
+        )
+
+        logging.error(
+            "ValueError - Invalid quantity input"
+        )
+
+    except ItemNotFoundError:
+        print(
+            "Mã đồ uống không hợp lệ, vui lòng kiểm tra lại thực đơn!"
+        )
+
+        logging.warning(
+            f"ItemNotFoundError - Code: "
+            f"{drink_code.strip().upper()}"
+        )
+
+    except InvalidQuantityError:
+        print(
+            "Số lượng phải lớn hơn 0!"
+        )
+
+        logging.warning(
+            f"InvalidQuantityError - Quantity: {quantity}"
+        )
 
 
 def view_order():
     if not current_order:
         print(
-            "Giỏ hàng trống, "
-            "vui lòng chọn món (Chức năng 2)."
+            "Giỏ hàng trống, vui lòng chọn món (Chức năng 2)."
         )
         return
 
     print("\n--- GIỎ HÀNG HIỆN TẠI ---")
     print(
-        "Mã SP | Tên đồ uống          | "
-        "Đơn giá  | Số lượng | Thành tiền"
+        "Mã SP | Tên đồ uống          | Đơn giá  | Số lượng | Thành tiền"
     )
     print("-" * 64)
 
@@ -132,12 +132,9 @@ def view_order():
 
 
 def checkout():
-    global current_order
-
     if not current_order:
         print(
-            "Giỏ hàng trống, "
-            "vui lòng chọn món (Chức năng 2)."
+            "Giỏ hàng trống, vui lòng chọn món (Chức năng 2)."
         )
         return
 
@@ -150,87 +147,27 @@ def checkout():
     )
 
     choice = input(
-        f"Xác nhận thanh toán "
-        f"{total:,} VNĐ? (y/n): "
-    ).strip().lower()
+        f"Xác nhận thanh toán {total:,} VNĐ? (y/n): "
+    ).lower()
 
     if choice == "y":
         logging.info(
             "Checkout successful"
         )
 
-        current_order = []
+        current_order.clear()
 
         print("Thanh toán thành công.")
         print("Giỏ hàng đã được làm trống.")
 
     elif choice == "n":
         print(
-            "Đã hủy thao tác thanh toán. "
-            "Quay lại menu chính."
+            "Đã hủy thao tác thanh toán. Quay lại menu chính."
         )
 
     else:
         print(
-            "Lựa chọn không hợp lệ. "
-            "Thanh toán đã bị hủy."
-        )
-
-
-def handle_add_order():
-    print("\n--- THÊM MÓN VÀO GIỎ ---")
-
-    try:
-        drink_code = input(
-            "Nhập mã đồ uống: "
-        )
-
-        quantity = int(
-            input("Nhập số lượng: ")
-        )
-
-        add_to_order(
-            drink_code,
-            quantity
-        )
-
-        code = drink_code.strip().upper()
-
-        print(
-            f"Đã thêm {quantity} x "
-            f"{DRINK_MENU[code]['name']} "
-            f"vào giỏ hàng."
-        )
-
-    except ValueError:
-        print(
-            "Vui lòng nhập số lượng "
-            "là một số nguyên!"
-        )
-
-        logging.error(
-            "ValueError - Invalid quantity input"
-        )
-
-    except ItemNotFoundError:
-        print(
-            "Mã đồ uống không hợp lệ, "
-            "vui lòng kiểm tra lại thực đơn!"
-        )
-
-        logging.warning(
-            f"ItemNotFoundError - Code: "
-            f"{drink_code.strip().upper()}"
-        )
-
-    except InvalidQuantityError:
-        print(
-            "Số lượng phải lớn hơn 0!"
-        )
-
-        logging.warning(
-            f"InvalidQuantityError - "
-            f"Quantity: {quantity}"
+            "Lựa chọn không hợp lệ. Thanh toán đã bị hủy."
         )
 
 
@@ -257,13 +194,11 @@ def main():
 
             case "5":
                 logging.info(
-                    "Cashier logged out. "
-                    "System shutdown."
+                    "Cashier logged out. System shutdown."
                 )
 
                 print(
-                    "Đã thoát ca làm việc. "
-                    "Hẹn gặp lại!"
+                    "Đã thoát ca làm việc. Hẹn gặp lại!"
                 )
 
                 break

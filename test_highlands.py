@@ -1,6 +1,6 @@
 import unittest
 
-from main import (
+from pos_logic import (
     calculate_total,
     add_to_order,
     InvalidQuantityError,
